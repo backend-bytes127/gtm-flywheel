@@ -73,6 +73,20 @@ The flywheel fires integrations automatically at each stage:
 
 All integrations are fire-and-forget — they don't block the UI response.
 
+### Instantly — Email Sequence (live campaign)
+
+![Instantly Campaign Analytics](docs/screenshots/instantly-campaign.jpg)
+
+*"SDR Agent - No-answer" campaign: Active · 3 emails sent · 2 leads enrolled from the flywheel*
+
+![Instantly Leads Enrolled](docs/screenshots/instantly-leads.jpg)
+
+*Leads from the flywheel auto-enrolled into the Instantly email sequence (names blurred)*
+
+### HubSpot Contacts Synced
+
+![HubSpot Contacts](docs/screenshots/hubspot-contacts.jpg)
+
 **HubSpot contacts synced from a live run (verified via API):**
 ```json
 { "firstname": "Satya", "lastname": "Nadella", "company": "Microsoft", "jobtitle": "Chairman and CEO" }
