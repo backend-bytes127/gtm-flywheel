@@ -22,19 +22,19 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 ## Screenshots
 
 ### Flywheel — Pipeline Funnel
-![GTM Flywheel](docs/screenshots/screenshot-flywheel.jpg)
+![GTM Flywheel](docs/screenshots/flywheel.jpg)
 
 ### Leads — Full Pipeline Table
-![Leads](docs/screenshots/screenshot-leads.jpg)
+![Leads](docs/screenshots/leads.jpg)
 
 ### Lead Detail — Signals, Research, Talking Points
-![Lead Detail](docs/screenshots/screenshot-lead-detail.jpg)
+![Lead Detail](docs/screenshots/lead-detail.jpg)
 
 ### Buying Signals — Real-time Trigger Feed
-![Signals](docs/screenshots/screenshot-signals.jpg)
+![Signals](docs/screenshots/signals.jpg)
 
 ### Outreach — AI-Written Messages Queue
-![Outreach](docs/screenshots/screenshot-outreach.jpg)
+![Outreach](docs/screenshots/outreach.jpg)
 
 ---
 
