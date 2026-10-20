@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Mail, ExternalLink, Check, Send, Clock, CheckCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_OUTREACH } from "@/lib/mock-data";
-import { relativeTime } from "@/lib/utils";
+import { RelativeTime } from "@/components/relative-time";
 
 const STATUS_GROUPS = [
   { key: "draft", label: "Drafts", icon: Clock, color: "text-zinc-400" },
@@ -73,7 +73,7 @@ export default function OutreachPage() {
                           </span>
                         </Badge>
                         {msg.sent_at && (
-                          <span className="text-xs text-zinc-600">Sent {relativeTime(msg.sent_at)}</span>
+                          <span className="text-xs text-zinc-600">Sent <RelativeTime date={msg.sent_at} /></span>
                         )}
                       </div>
 

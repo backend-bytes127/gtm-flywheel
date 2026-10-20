@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Zap, Loader2, TrendingUp, Briefcase, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_SIGNALS } from "@/lib/mock-data";
-import { relativeTime } from "@/lib/utils";
+import { RelativeTime } from "@/components/relative-time";
 import type { SignalType } from "@/types";
 
 const signalConfig: Record<SignalType, { label: string; variant: "blue" | "yellow" | "green" | "purple" | "orange"; icon: React.ElementType }> = {
@@ -108,7 +108,7 @@ export default function SignalsPage() {
                       <span className="text-xs text-zinc-500">·</span>
                       <p className="text-xs text-zinc-400">{signal.company}</p>
                     </div>
-                    <span className="text-xs text-zinc-600 flex-shrink-0">{relativeTime(signal.detected_at)}</span>
+                    <RelativeTime date={signal.detected_at} className="text-xs text-zinc-600 flex-shrink-0" />
                   </div>
                   <div className="flex items-center gap-2 mt-1.5">
                     <Badge variant={config.variant}>{config.label}</Badge>

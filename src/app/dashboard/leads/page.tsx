@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Loader2, X, ExternalLink } from "lucide-react";
 import { StageBadge } from "@/components/stage-badge";
 import { LeadDetailPanel } from "@/components/lead-detail-panel";
-import { relativeTime } from "@/lib/utils";
+import { RelativeTime } from "@/components/relative-time";
 import type { Lead, LeadStage } from "@/types";
 
 const STAGE_TABS: { key: "all" | LeadStage; label: string }[] = [
@@ -169,7 +169,7 @@ export default function LeadsPage() {
                   <StageBadge stage={lead.stage} />
                 </td>
                 <td className="px-4 py-3 text-zinc-500 text-xs">
-                  {lead.last_enriched_at ? relativeTime(lead.last_enriched_at) : "—"}
+                  <RelativeTime date={lead.last_enriched_at} />
                 </td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
