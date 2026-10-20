@@ -6,6 +6,14 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 
 ---
 
+## Live Demo — Full Flow
+
+![Score + Outreach Flow](docs/screenshots/gtm-flywheel-score-outreach-flow.gif)
+
+*AI scores a lead 0–100, generates a personalized outreach message, pushes to Slack + HubSpot + HeyReach/Instantly — all in one click.*
+
+---
+
 ## Architecture Diagram
 
 ![GTM Flywheel Architecture](gtm-flywheel-architecture.png)
@@ -17,11 +25,11 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 | Stage | What happens |
 |---|---|
 | **Signal** | Detect buying intent — funding rounds, job changes, hiring signals, tech stack shifts |
-| **Enrich** | Research the lead: role, company context, recent activity via AI |
+| **Enrich** | Research the lead: role, company context, recent activity via AI (Claude Sonnet) |
 | **Score** | Claude scores 0–100 fit against your ICP based on signals + research |
 | **Outreach** | Claude writes hyper-personalized email or LinkedIn message |
 | **Track** | Approve → Send → Track reply sentiment, suggest next action |
-| **Expand** | Push to HeyReach (LinkedIn) or Instantly (email) for multi-touch sequences |
+| **Expand** | Push to HeyReach (LinkedIn sequences) or Instantly (email sequences) |
 
 ---
 
@@ -33,14 +41,44 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 ### Leads — Full Pipeline Table
 ![Leads](docs/screenshots/leads.jpg)
 
-### Lead Detail — Signals, Research, Talking Points
-![Lead Detail](docs/screenshots/lead-detail.jpg)
-
 ### Buying Signals — Real-time Trigger Feed
 ![Signals](docs/screenshots/signals.jpg)
 
 ### Outreach — AI-Written Messages Queue
 ![Outreach](docs/screenshots/outreach.jpg)
+
+---
+
+## Integration: Slack Lead Cards
+
+When a lead is enriched, the bot posts a Block Kit card to Slack with one-click stage updates:
+
+![Slack Lead Card](docs/screenshots/slack-lead-card.jpg)
+
+The **Replied / Call Booked / Lost** buttons trigger `POST /api/webhook/slack` and update the lead stage in real time.
+
+---
+
+## Integration: Live CRM + Sequences
+
+The flywheel fires integrations automatically at each stage:
+
+| Trigger | Integration | What fires |
+|---|---|---|
+| After `enrich` | Slack | Block Kit card with Replied / Call Booked / Lost buttons |
+| After `score` | HubSpot | Contact upserted (create or update) with fit score + stage |
+| After `write_outreach` (LinkedIn) | HeyReach | Lead enrolled in LinkedIn sequence |
+| After `write_outreach` (email) | Instantly | Lead enrolled in email sequence |
+| After `write_outreach` | HubSpot | Stage updated to `outreach_sent` |
+
+All integrations are fire-and-forget — they don't block the UI response.
+
+**HubSpot contacts synced from a live run (verified via API):**
+```json
+{ "firstname": "Satya", "lastname": "Nadella", "company": "Microsoft", "jobtitle": "Chairman and CEO" }
+{ "firstname": "Rohit",  "lastname": "[redacted]",  "company": "Vyam.AI",    "jobtitle": "Founding Member"  }
+{ "firstname": "Prashant", "lastname": "[redacted]", "company": "IQ-Line", "jobtitle": "Senior AI Engineer" }
+```
 
 ---
 
@@ -65,24 +103,24 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 │  AI Agents (src/agents/flywheel-agent.ts)                       │
 │  ┌────────────┐  ┌────────────┐  ┌──────────────┐             │
 │  │scoreLead() │  │writeOut-   │  │researchLead()│             │
-│  │0-100 fit   │  │reach()     │  │summary +     │             │
+│  │0–100 fit   │  │reach()     │  │summary +     │             │
 │  │score       │  │email/li    │  │talking pts   │             │
 │  └────────────┘  └────────────┘  └──────────────┘             │
 │                         │                                       │
-│                    Claude Sonnet                                 │
+│                    Claude Sonnet 4.5                             │
 │                    (via AI SDK v7)                               │
 │                                                                 │
 │  Data Layer                                                     │
 │  ┌──────────────────────────────────────────┐                  │
 │  │  SQLite (better-sqlite3) · flywheel.db   │                  │
 │  │  leads · outreach_messages · signals     │                  │
-│  │  WAL mode · FK constraints · singleton  │                  │
+│  │  WAL mode · FK constraints · singleton   │                  │
 │  └──────────────────────────────────────────┘                  │
 │                                                                 │
-│  Integrations (via n8n webhooks)                                │
+│  Integrations (src/lib/integrations.ts)                         │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
 │  │  Slack   │  │HeyReach  │  │Instantly │  │HubSpot   │       │
-│  │/prospect │  │LinkedIn  │  │Email seq │  │CRM sync  │       │
+│  │Block Kit │  │LinkedIn  │  │Email seq │  │CRM v3    │       │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -93,14 +131,14 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js App Router |
-| AI | AI SDK v7 + `@ai-sdk/anthropic` (Claude Sonnet) |
+| Framework | Next.js 16 App Router |
+| AI | AI SDK v7 + `@ai-sdk/anthropic` (Claude Sonnet 4.5) |
 | Database | SQLite via `better-sqlite3` (WAL mode, local file) |
 | Styling | Tailwind CSS v4 |
 | Icons | lucide-react |
-| Workflow automation | n8n (self-hosted) |
+| CRM | HubSpot CRM API v3 |
 | Outreach channels | HeyReach (LinkedIn), Instantly (email) |
-| Slack trigger | `/prospect <linkedin_url>` command |
+| Notifications | Slack Block Kit + webhook |
 
 ---
 
@@ -131,6 +169,23 @@ cp .env.example .env.local
 Required:
 ```
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Slack (optional — for lead card notifications + /prospect command)
+SLACK_BOT_TOKEN=xoxb-...
+SLACK_SIGNING_SECRET=...
+SLACK_CHANNEL_ID=C...
+
+# HubSpot (optional — for CRM sync)
+HUBSPOT_ACCESS_TOKEN=pat-...
+HUBSPOT_PORTAL_ID=...
+
+# HeyReach (optional — for LinkedIn sequences)
+HEYREACH_API_KEY=...
+HEYREACH_CAMPAIGN_ID=...
+
+# Instantly (optional — for email sequences)
+INSTANTLY_API_KEY=...
+INSTANTLY_CAMPAIGN_ID=...
 ```
 
 ### 3. Seed sample data
@@ -205,12 +260,11 @@ src/
     api/           # Route handlers
     dashboard/     # Pages: flywheel, leads, signals, outreach
   components/      # LeadDetailPanel, StageBadge, Badge, RelativeTime
-  lib/             # SQLite adapter (db.ts), mock data, utils
+  lib/             # SQLite adapter (db.ts), integrations.ts, utils
   types/           # Shared TypeScript types
 scripts/
   seed.ts          # Seeds flywheel.db with sample leads + outreach
 docs/
-  screenshots/     # UI screenshots
-gtm-flywheel-architecture.excalidraw  # Architecture diagram source
-gtm-flywheel-architecture.png         # Architecture diagram (rendered)
+  screenshots/     # UI screenshots + GIFs
+gtm-flywheel-architecture.png   # Architecture diagram
 ```

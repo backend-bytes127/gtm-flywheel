@@ -5,6 +5,12 @@ import type { Lead, Signal } from "@/types";
 
 const model = anthropic("claude-sonnet-4-5");
 
+function extractJson(text: string): unknown {
+  // Strip markdown code fences if present
+  const stripped = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+  return JSON.parse(stripped);
+}
+
 export async function scoreLead(lead: Lead): Promise<number> {
   const { text } = await generateText({
     model,
@@ -18,7 +24,7 @@ Research: ${lead.research?.slice(0, 300) ?? "none"}`,
   });
 
   try {
-    const parsed = JSON.parse(text.trim());
+    const parsed = extractJson(text) as { score?: unknown };
     return Math.min(100, Math.max(0, Number(parsed.score) || 0));
   } catch {
     return 0;
@@ -44,7 +50,7 @@ Research: ${lead.research?.slice(0, 400) ?? "none"}`,
   });
 
   try {
-    return JSON.parse(text.trim());
+    return extractJson(text) as { subject: string | null; body: string };
   } catch {
     return { subject: null, body: text.trim() };
   }
@@ -64,7 +70,7 @@ Output JSON: {"sentiment": "positive|neutral|negative", "next_action": "book_cal
   });
 
   try {
-    return JSON.parse(text.trim());
+    return extractJson(text) as { sentiment: "positive" | "neutral" | "negative"; next_action: "book_call" | "send_followup" | "mark_lost" | "nurture"; suggested_response: string };
   } catch {
     return { sentiment: "neutral", next_action: "send_followup", suggested_response: "" };
   }
@@ -87,7 +93,7 @@ LinkedIn: ${linkedinUrl}`,
   });
 
   try {
-    return JSON.parse(text.trim());
+    return extractJson(text) as { research: string; talking_points: string[] };
   } catch {
     return { research: text.trim(), talking_points: [] };
   }
