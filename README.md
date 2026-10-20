@@ -1,36 +1,209 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GTM Flywheel Orchestrator
+
+> One person running an entire company's GTM — signal to close, automated.
+
+A full-stack AI-powered GTM platform that replaces the linear sales funnel with a self-reinforcing flywheel. Built to demonstrate how a single operator can orchestrate outbound prospecting, lead enrichment, ICP scoring, AI-written outreach, and CRM integration using modern AI infrastructure.
+
+---
+
+## What It Does
+
+| Stage | What happens |
+|---|---|
+| **Signal** | Detect buying intent — funding rounds, job changes, hiring signals, tech stack shifts |
+| **Enrich** | Research the lead: role, company context, recent activity via AI |
+| **Score** | Claude scores 0–100 fit against your ICP based on signals + research |
+| **Outreach** | Claude writes hyper-personalized email or LinkedIn message |
+| **Track** | Approve → Send → Track reply sentiment, suggest next action |
+| **Expand** | Push to HeyReach (LinkedIn) or Instantly (email) for multi-touch sequences |
+
+---
+
+## Screenshots
+
+### Flywheel — Pipeline Funnel
+![GTM Flywheel](docs/screenshots/screenshot-flywheel.jpg)
+
+### Leads — Full Pipeline Table
+![Leads](docs/screenshots/screenshot-leads.jpg)
+
+### Lead Detail — Signals, Research, Talking Points
+![Lead Detail](docs/screenshots/screenshot-lead-detail.jpg)
+
+### Buying Signals — Real-time Trigger Feed
+![Signals](docs/screenshots/screenshot-signals.jpg)
+
+### Outreach — AI-Written Messages Queue
+![Outreach](docs/screenshots/screenshot-outreach.jpg)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        GTM Flywheel                             │
+│                                                                 │
+│  Next.js 14 App Router                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │Flywheel  │  │ Leads    │  │ Signals  │  │Outreach  │       │
+│  │/dashboard│  │/dashboard│  │/dashboard│  │/dashboard│       │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│                                                                 │
+│  API Routes                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐     │
+│  │/api/leads    │  │/api/flywheel │  │/api/webhook/slack│     │
+│  │GET/POST/PATCH│  │POST (steps)  │  │URL verify + events│    │
+│  └──────────────┘  └──────────────┘  └──────────────────┘     │
+│                                                                 │
+│  AI Agents (src/agents/flywheel-agent.ts)                       │
+│  ┌────────────┐  ┌────────────┐  ┌──────────────┐             │
+│  │scoreLead() │  │writeOut-   │  │researchLead()│             │
+│  │0-100 fit   │  │reach()     │  │summary +     │             │
+│  │score       │  │email/li    │  │talking pts   │             │
+│  └────────────┘  └────────────┘  └──────────────┘             │
+│                         │                                       │
+│                    Claude Sonnet                                 │
+│                    (via AI SDK v7)                               │
+│                                                                 │
+│  Data Layer                                                     │
+│  ┌──────────────────┐  ┌──────────────────┐                    │
+│  │Supabase Postgres │  │Mock data (demo)  │                    │
+│  │icps, leads,      │  │6 leads, signals, │                    │
+│  │outreach_messages │  │outreach msgs     │                    │
+│  └──────────────────┘  └──────────────────┘                    │
+│                                                                 │
+│  Integrations (via n8n webhooks)                                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │  Slack   │  │HeyReach  │  │Instantly │  │HubSpot   │       │
+│  │/prospect │  │LinkedIn  │  │Email seq │  │CRM sync  │       │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 App Router |
+| AI | AI SDK v7 + `@ai-sdk/anthropic` (Claude Sonnet) |
+| Database | Supabase (Postgres) |
+| Styling | Tailwind CSS v4 |
+| Icons | lucide-react |
+| Workflow automation | n8n (self-hosted) |
+| Outreach channels | HeyReach (LinkedIn), Instantly (email) |
+| Slack trigger | `/prospect <linkedin_url>` command |
+
+---
+
+## Lead Stage Machine
+
+```
+new → enriched → scored → outreach_sent → replied → call_booked → won
+                                                   ↘ nurture
+                                                   ↘ lost
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Environment variables
+
+```bash
+cp .env.example .env.local
+```
+
+Required:
+```
+ANTHROPIC_API_KEY=sk-ant-...
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+```
+
+### 3. Database setup
+
+Run `db/schema.sql` against your Supabase project.
+
+### 4. Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) — redirects to `/dashboard/flywheel`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+> **Demo mode**: The app runs entirely on mock data without Supabase connected. All 5 pages are fully interactive.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## API Reference
 
-To learn more about Next.js, take a look at the following resources:
+### `POST /api/flywheel`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run a flywheel step for a lead.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```json
+{
+  "lead_id": "uuid",
+  "step": "enrich" | "score" | "write_outreach"
+}
+```
 
-## Deploy on Vercel
+### `GET /api/flywheel`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Returns funnel stats: count per stage, avg fit score, conversion rates.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### `GET /api/leads`
+
+```
+?stage=enriched
+?icp_id=uuid
+```
+
+### `POST /api/leads`
+
+```json
+{ "linkedin_url": "https://linkedin.com/in/..." }
+```
+
+### `PATCH /api/leads`
+
+```json
+{ "id": "uuid", "stage": "call_booked", "fit_score": 87 }
+```
+
+### `POST /api/webhook/slack`
+
+Handles Slack events:
+- URL verification challenge
+- `block_actions` — button clicks update lead stage
+- `message` — `/prospect <url>` inserts new lead and triggers enrichment
+
+---
+
+## Project Structure
+
+```
+src/
+  agents/          # AI agent functions (score, write, research)
+  app/
+    api/           # Route handlers
+    dashboard/     # Pages: flywheel, leads, signals, outreach
+  components/      # LeadDetailPanel, StageBadge, Badge, StatCard
+  lib/             # Supabase client, mock data, utils
+  types/           # Shared TypeScript types
+db/
+  schema.sql       # Postgres schema
+docs/
+  screenshots/     # UI screenshots
+```

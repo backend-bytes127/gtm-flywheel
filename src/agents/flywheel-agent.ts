@@ -1,6 +1,6 @@
-import { generateText, tool } from "ai";
+import { generateText } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { z } from "zod";
+
 import type { Lead, Signal } from "@/types";
 
 const model = anthropic("claude-sonnet-4-5");
@@ -14,7 +14,7 @@ Output ONLY a JSON object: {"score": <number>, "reason": "<one sentence>"}`,
 Location: ${lead.location}
 Signals: ${(lead.signals ?? []).map((s: Signal) => s.detail).join("; ") || "none"}
 Research: ${lead.research?.slice(0, 300) ?? "none"}`,
-    maxTokens: 100,
+    maxOutputTokens: 100,
   });
 
   try {
@@ -40,7 +40,7 @@ Title: ${lead.current_title} at ${lead.current_company}
 Signals: ${(lead.signals ?? []).map((s: Signal) => s.detail).join("; ") || "none"}
 Talking points: ${(lead.talking_points ?? []).join(" | ") || "none"}
 Research: ${lead.research?.slice(0, 400) ?? "none"}`,
-    maxTokens: 600,
+    maxOutputTokens: 600,
   });
 
   try {
@@ -60,7 +60,7 @@ export async function analyzeReply(replyText: string): Promise<{
     system: `Analyze an SDR reply and decide next action.
 Output JSON: {"sentiment": "positive|neutral|negative", "next_action": "book_call|send_followup|mark_lost|nurture", "suggested_response": "<short response draft>"}`,
     prompt: `Reply: ${replyText}`,
-    maxTokens: 300,
+    maxOutputTokens: 300,
   });
 
   try {
@@ -76,13 +76,6 @@ export async function researchLead(linkedinUrl: string, name: string, company: s
 }> {
   const { text } = await generateText({
     model,
-    tools: {
-      web_search: tool({
-        description: "Search for information about a person or company",
-        parameters: z.object({ query: z.string() }),
-        execute: async ({ query }) => `Search results for: ${query} (simulated)`,
-      }),
-    },
     system: `You are a GTM researcher. Given a LinkedIn profile and company, write:
 1. A concise research summary (2-3 sentences on what they do, their focus, recent activity)
 2. 3 sharp talking points for outreach
@@ -90,7 +83,7 @@ Output JSON: {"research": "<summary>", "talking_points": ["<point1>", "<point2>"
     prompt: `Person: ${name}
 Company: ${company}
 LinkedIn: ${linkedinUrl}`,
-    maxTokens: 500,
+    maxOutputTokens: 500,
   });
 
   try {
