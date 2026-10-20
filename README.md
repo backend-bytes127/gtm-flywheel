@@ -8,9 +8,18 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 
 ## Live Demo — Full Flow
 
+![GTM Flywheel Full Flow](docs/screenshots/gtm-flywheel-full-flow.gif)
+
+*End-to-end: GTM Flywheel pipeline (scored leads + AI-written outreach queue) → Slack #sdr-agent lead cards with Replied/Call Booked/Lost buttons → HubSpot CRM contacts synced → Instantly email sequence running live. All triggered automatically.*
+
+<details>
+<summary>Score + Outreach flow only</summary>
+
 ![Score + Outreach Flow](docs/screenshots/gtm-flywheel-score-outreach-flow.gif)
 
 *AI scores a lead 0–100, generates a personalized outreach message, pushes to Slack + HubSpot + HeyReach/Instantly — all in one click.*
+
+</details>
 
 ---
 
