@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Loader2, X, ExternalLink } from "lucide-react";
 import { StageBadge } from "@/components/stage-badge";
 import { LeadDetailPanel } from "@/components/lead-detail-panel";
-import { MOCK_LEADS } from "@/lib/mock-data";
 import { relativeTime } from "@/lib/utils";
 import type { Lead, LeadStage } from "@/types";
 
@@ -20,7 +19,13 @@ const STAGE_TABS: { key: "all" | LeadStage; label: string }[] = [
 ];
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<Lead[]>(MOCK_LEADS);
+  const [leads, setLeads] = useState<Lead[]>([]);
+
+  useEffect(() => {
+    fetch("/api/leads")
+      .then((r) => r.json())
+      .then((d) => setLeads(d.leads ?? []));
+  }, []);
   const [activeStage, setActiveStage] = useState<"all" | LeadStage>("all");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);

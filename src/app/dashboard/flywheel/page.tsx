@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
-import { MOCK_LEADS } from "@/lib/mock-data";
+import type { Lead } from "@/types";
 
 const STAGES = [
   { key: "new", label: "New", color: "bg-zinc-500" },
@@ -15,9 +16,15 @@ const STAGES = [
 ];
 
 export default function FlywheelPage() {
-  const leads = MOCK_LEADS;
-  const total = leads.length;
+  const [leads, setLeads] = useState<Lead[]>([]);
 
+  useEffect(() => {
+    fetch("/api/leads")
+      .then((r) => r.json())
+      .then((d) => setLeads(d.leads ?? []));
+  }, []);
+
+  const total = leads.length;
   const counts = STAGES.map(s => ({
     ...s,
     count: leads.filter(l => l.stage === s.key).length,
@@ -27,19 +34,16 @@ export default function FlywheelPage() {
   const avgScore = scored.length > 0
     ? Math.round(scored.reduce((a, b) => a + (b.fit_score ?? 0), 0) / scored.length)
     : 0;
-
   const outreachSent = leads.filter(l => ["outreach_sent", "replied", "call_booked", "won"].includes(l.stage)).length;
   const won = leads.filter(l => l.stage === "won").length;
 
   return (
     <div className="p-8 space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white">GTM Flywheel</h1>
         <p className="text-sm text-zinc-500 mt-1">Your full pipeline — signal to close, automated.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
         <StatCard label="Total Leads" value={total} sub="across all stages" />
         <StatCard label="Avg Fit Score" value={`${avgScore}/100`} sub="of scored leads" accent="text-yellow-400" />
@@ -47,7 +51,6 @@ export default function FlywheelPage() {
         <StatCard label="Won" value={won} sub="closed deals" accent="text-green-400" />
       </div>
 
-      {/* Funnel */}
       <div className="rounded-xl bg-[#111111] border border-[#1f1f1f] p-6">
         <div className="flex items-center gap-1.5 mb-6">
           <TrendingUp className="w-4 h-4 text-indigo-400" />
@@ -63,13 +66,12 @@ export default function FlywheelPage() {
 
             return (
               <div key={stage.key} className="flex-1 flex flex-col items-center gap-2">
-                {convRate !== null && (
+                {convRate !== null ? (
                   <div className="flex items-center gap-0.5 text-[10px] text-zinc-500">
                     <ArrowRight className="w-3 h-3" />
                     <span>{convRate}%</span>
                   </div>
-                )}
-                {convRate === null && <div className="h-4" />}
+                ) : <div className="h-4" />}
                 <div className="w-full flex flex-col items-center gap-1">
                   <span className="text-sm font-bold text-white">{stage.count}</span>
                   <div
@@ -84,7 +86,6 @@ export default function FlywheelPage() {
         </div>
       </div>
 
-      {/* Recent activity */}
       <div className="rounded-xl bg-[#111111] border border-[#1f1f1f] p-6">
         <h2 className="text-sm font-semibold text-white mb-4">Recent Leads</h2>
         <div className="space-y-2">
