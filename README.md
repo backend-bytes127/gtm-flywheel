@@ -6,6 +6,12 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 
 ---
 
+## Architecture Diagram
+
+![GTM Flywheel Architecture](gtm-flywheel-architecture.png)
+
+---
+
 ## What It Does
 
 | Stage | What happens |
@@ -44,7 +50,7 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 ┌─────────────────────────────────────────────────────────────────┐
 │                        GTM Flywheel                             │
 │                                                                 │
-│  Next.js 14 App Router                                          │
+│  Next.js App Router                                             │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
 │  │Flywheel  │  │ Leads    │  │ Signals  │  │Outreach  │       │
 │  │/dashboard│  │/dashboard│  │/dashboard│  │/dashboard│       │
@@ -67,11 +73,11 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 │                    (via AI SDK v7)                               │
 │                                                                 │
 │  Data Layer                                                     │
-│  ┌──────────────────┐  ┌──────────────────┐                    │
-│  │Supabase Postgres │  │Mock data (demo)  │                    │
-│  │icps, leads,      │  │6 leads, signals, │                    │
-│  │outreach_messages │  │outreach msgs     │                    │
-│  └──────────────────┘  └──────────────────┘                    │
+│  ┌──────────────────────────────────────────┐                  │
+│  │  SQLite (better-sqlite3) · flywheel.db   │                  │
+│  │  leads · outreach_messages · signals     │                  │
+│  │  WAL mode · FK constraints · singleton  │                  │
+│  └──────────────────────────────────────────┘                  │
 │                                                                 │
 │  Integrations (via n8n webhooks)                                │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
@@ -87,9 +93,9 @@ A full-stack AI-powered GTM platform that replaces the linear sales funnel with 
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 App Router |
+| Framework | Next.js App Router |
 | AI | AI SDK v7 + `@ai-sdk/anthropic` (Claude Sonnet) |
-| Database | Supabase (Postgres) |
+| Database | SQLite via `better-sqlite3` (WAL mode, local file) |
 | Styling | Tailwind CSS v4 |
 | Icons | lucide-react |
 | Workflow automation | n8n (self-hosted) |
@@ -125,14 +131,15 @@ cp .env.example .env.local
 Required:
 ```
 ANTHROPIC_API_KEY=sk-ant-...
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
-### 3. Database setup
+### 3. Seed sample data
 
-Run `db/schema.sql` against your Supabase project.
+```bash
+npm run seed
+```
+
+Seeds 6 leads across all pipeline stages + 3 outreach messages into `flywheel.db`.
 
 ### 4. Run locally
 
@@ -141,8 +148,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) — redirects to `/dashboard/flywheel`.
-
-> **Demo mode**: The app runs entirely on mock data without Supabase connected. All 5 pages are fully interactive.
 
 ---
 
@@ -199,11 +204,13 @@ src/
   app/
     api/           # Route handlers
     dashboard/     # Pages: flywheel, leads, signals, outreach
-  components/      # LeadDetailPanel, StageBadge, Badge, StatCard
-  lib/             # Supabase client, mock data, utils
+  components/      # LeadDetailPanel, StageBadge, Badge, RelativeTime
+  lib/             # SQLite adapter (db.ts), mock data, utils
   types/           # Shared TypeScript types
-db/
-  schema.sql       # Postgres schema
+scripts/
+  seed.ts          # Seeds flywheel.db with sample leads + outreach
 docs/
   screenshots/     # UI screenshots
+gtm-flywheel-architecture.excalidraw  # Architecture diagram source
+gtm-flywheel-architecture.png         # Architecture diagram (rendered)
 ```
